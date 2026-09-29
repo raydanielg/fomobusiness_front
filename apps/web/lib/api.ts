@@ -69,7 +69,7 @@ export const api = {
     request<T>(path, { method: "POST", body: JSON.stringify(data ?? {}) }),
 
   login: (email: string, password: string) =>
-    request<{ access: string; refresh: string; user: { email: string; is_staff: boolean } }>(
+    request<{ access: string; refresh: string; user: { email: string; is_staff: boolean; is_superuser?: boolean } }>(
       "/auth/login/",
       { method: "POST", body: JSON.stringify({ email, password }) }
     ),
@@ -144,6 +144,7 @@ export interface Payment {
   channel_detail: string
   customer_name: string
   customer_phone: string
+  customer_email: string
   amount: string
   fee: string
   net_amount: string
@@ -173,6 +174,7 @@ export interface CheckoutSession {
   business_name: string
   provider: string
   checkout_url: string
+  customer_name: string
   amount: string
   currency: string
   status: string
@@ -259,6 +261,7 @@ export interface Provider {
   api_version: string
   environment: string
   status: string
+  is_primary: boolean
   last_success_at: string | null
   last_failure_at: string | null
   last_error: string

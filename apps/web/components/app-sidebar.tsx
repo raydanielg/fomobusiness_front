@@ -54,7 +54,7 @@ export function AppSidebar() {
             {billingNav.map((item) => (
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
-                  asChild
+                  render={<Link href={item.href} />}
                   isActive={
                     item.href === "/billing"
                       ? pathname === item.href
@@ -62,10 +62,8 @@ export function AppSidebar() {
                   }
                   tooltip={item.title}
                 >
-                  <Link href={item.href}>
-                    <item.icon size={18} />
-                    <span>{item.title}</span>
-                  </Link>
+                  <item.icon size={18} />
+                  <span>{item.title}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
