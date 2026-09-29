@@ -2,7 +2,7 @@ import * as React from "react"
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
 import { cn } from "cn"
-import { CaretRight, DotsThree } from "@phosphor-icons/react"
+import { CaretRightIcon, DotsThreeIcon } from "@phosphor-icons/react"
 
 function Breadcrumb({ className, ...props }: React.ComponentProps<"nav">) {
   return (
@@ -85,7 +85,7 @@ function BreadcrumbSeparator({
       {...props}
     >
       {children ?? (
-        <CaretRight className="rtl:rotate-180" />
+        <CaretRightIcon className="rtl:rotate-180" />
       )}
     </li>
   )
@@ -106,7 +106,7 @@ function BreadcrumbEllipsis({
       )}
       {...props}
     >
-      <DotsThree
+      <DotsThreeIcon
       />
       <span className="sr-only">More</span>
     </span>

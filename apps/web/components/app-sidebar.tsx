@@ -1,90 +1,110 @@
 "use client"
 
-import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import {
-  Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel,
-  SidebarMenu, SidebarMenuItem, SidebarMenuButton,
-  SidebarHeader, SidebarFooter, SidebarRail,
+  Sidebar, SidebarContent, SidebarFooter, SidebarHeader,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarRail,
 } from "@workspace/ui/components/sidebar"
 import {
   Gauge, CreditCard, FileText, ListChecks, Link as LinkIcon,
   MonitorArrowUp, ArrowCounterClockwise, ArrowsLeftRight,
   Warning, Scales, Lightning, Plugs, ChartLine, Gear,
-  SignOut,
 } from "@phosphor-icons/react"
-import { clearTokens } from "@/lib/api"
+import { NavMain } from "@/components/nav-main"
+import { NavUser } from "@/components/nav-user"
+import { NavSecondary } from "@/components/nav-secondary"
+import { BookOpen, Heartbeat } from "@phosphor-icons/react"
 
-const billingNav = [
-  { title: "Overview", href: "/billing", icon: Gauge },
-  { title: "Payments", href: "/billing/payments", icon: CreditCard },
-  { title: "Subscriptions", href: "/billing/subscriptions", icon: ListChecks },
-  { title: "Invoices", href: "/billing/invoices", icon: FileText },
-  { title: "Payment Links", href: "/billing/payment-links", icon: LinkIcon },
-  { title: "Checkout Sessions", href: "/billing/sessions", icon: MonitorArrowUp },
-  { title: "Refunds", href: "/billing/refunds", icon: ArrowCounterClockwise },
-  { title: "Payouts", href: "/billing/payouts", icon: ArrowsLeftRight },
-  { title: "Failed Payments", href: "/billing/failed", icon: Warning },
-  { title: "Reconciliation", href: "/billing/reconciliation", icon: Scales },
-  { title: "Payment Events", href: "/billing/events", icon: Lightning },
-  { title: "Webhooks", href: "/billing/webhooks", icon: Plugs },
-  { title: "Providers", href: "/billing/providers", icon: Gear },
-  { title: "Analytics", href: "/billing/analytics", icon: ChartLine },
+const nav = [
+  { title: "Overview", url: "/billing", icon: <Gauge size={18} />, isActive: true },
+  {
+    title: "Payments",
+    url: "/billing/payments",
+    icon: <CreditCard size={18} />,
+    items: [
+      { title: "All payments", url: "/billing/payments" },
+      { title: "Failed payments", url: "/billing/failed" },
+      { title: "Refunds", url: "/billing/refunds" },
+    ],
+  },
+  {
+    title: "Commerce",
+    url: "/billing/subscriptions",
+    icon: <ListChecks size={18} />,
+    items: [
+      { title: "Subscriptions", url: "/billing/subscriptions" },
+      { title: "Invoices", url: "/billing/invoices" },
+      { title: "Payment links", url: "/billing/payment-links" },
+      { title: "Checkout sessions", url: "/billing/sessions" },
+    ],
+  },
+  {
+    title: "Money movement",
+    url: "/billing/payouts",
+    icon: <ArrowsLeftRight size={18} />,
+    items: [
+      { title: "Payouts", url: "/billing/payouts" },
+      { title: "Reconciliation", url: "/billing/reconciliation" },
+    ],
+  },
+  {
+    title: "Operations",
+    url: "/billing/events",
+    icon: <Lightning size={18} />,
+    items: [
+      { title: "Payment events", url: "/billing/events" },
+      { title: "Webhooks", url: "/billing/webhooks" },
+    ],
+  },
+  { title: "Providers", url: "/billing/providers", icon: <Gear size={18} /> },
+  { title: "Analytics", url: "/billing/analytics", icon: <ChartLine size={18} /> },
+]
+
+const secondary = [
+  { title: "API docs", url: "https://fomoapi.158-220-114-187.sslip.io/api/docs/", icon: <BookOpen size={18} /> },
+  { title: "Health", url: "https://fomoapi.158-220-114-187.sslip.io/health/", icon: <Heartbeat size={18} /> },
 ]
 
 export function AppSidebar() {
   const pathname = usePathname()
+  // mark items active by route
+  const items = nav.map((item) => ({
+    ...item,
+    isActive: item.url === "/billing"
+      ? pathname === "/billing"
+      : pathname.startsWith(item.url),
+  }))
+
   return (
     <Sidebar collapsible="icon" variant="sidebar">
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-1">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-lime-400 font-bold text-black">
-            F
-          </div>
-          <div className="leading-tight group-data-[collapsible=icon]:hidden">
-            <p className="text-sm font-semibold">Fomo</p>
-            <p className="text-muted-foreground text-xs">Admin Console</p>
-          </div>
-        </div>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Billing &amp; Payments</SidebarGroupLabel>
-          <SidebarMenu>
-            {billingNav.map((item) => (
-              <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton
-                  render={<Link href={item.href} />}
-                  isActive={
-                    item.href === "/billing"
-                      ? pathname === item.href
-                      : pathname.startsWith(item.href)
-                  }
-                  tooltip={item.title}
-                >
-                  <item.icon size={18} />
-                  <span>{item.title}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroup>
-      </SidebarContent>
-      <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Sign out"
-              onClick={() => {
-                clearTokens()
-                window.location.href = "/login"
-              }}
-            >
-              <SignOut size={18} />
-              <span>Sign out</span>
+            <SidebarMenuButton size="lg" render={<a href="/billing" />}>
+              <div className="flex size-8 items-center justify-center rounded-lg bg-lime-400">
+                <Image src="/fomo_icon.png" alt="Fomo" width={24} height={24} />
+              </div>
+              <div className="grid flex-1 text-start text-sm leading-tight">
+                <span className="truncate font-semibold">Fomo</span>
+                <span className="text-muted-foreground truncate text-xs">
+                  Admin Console
+                </span>
+              </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+      </SidebarHeader>
+
+      <SidebarContent>
+        <NavMain label="Billing &amp; Payments" items={items} />
+      </SidebarContent>
+
+      <SidebarFooter>
+        <NavSecondary items={secondary} />
+        <NavUser
+          user={{ name: "Fomo Admin", email: "admin", avatar: "/fomo_icon.png" }}
+        />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

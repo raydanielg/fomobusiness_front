@@ -12,6 +12,12 @@ const fontMono = Geist_Mono({
   variable: "--font-mono",
 })
 
+export const metadata = {
+  title: "Fomo Admin — Billing & Payments",
+  description: "Fomo Financial Command Center",
+  icons: { icon: "/fomo_icon.png", apple: "/fomo_logo.png" },
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
