@@ -2,6 +2,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google"
 
 import "@workspace/ui/globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { AuthProvider } from "@/lib/auth"
 import { TooltipProvider } from "@workspace/ui/components/tooltip"
 import { cn } from "@workspace/ui/lib/utils";
 
@@ -13,8 +14,8 @@ const fontMono = Geist_Mono({
 })
 
 export const metadata = {
-  title: "Fomo Admin — Billing & Payments",
-  description: "Fomo Financial Command Center",
+  title: { default: "Fomo — Your Business, Simplified.", template: "%s · Fomo" },
+  description: "Sales, inventory, customers and payments in one platform.",
   icons: { icon: "/fomo_icon.png", apple: "/fomo_logo.png" },
 }
 
@@ -31,7 +32,9 @@ export default function RootLayout({
     >
       <body>
         <ThemeProvider>
-          <TooltipProvider>{children}</TooltipProvider>
+          <TooltipProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>

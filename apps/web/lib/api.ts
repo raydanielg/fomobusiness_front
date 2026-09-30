@@ -69,10 +69,39 @@ export const api = {
     request<T>(path, { method: "POST", body: JSON.stringify(data ?? {}) }),
 
   login: (email: string, password: string) =>
-    request<{ access: string; refresh: string; user: { email: string; is_staff: boolean; is_superuser?: boolean } }>(
+    request<AuthResponse>(
       "/auth/login/",
       { method: "POST", body: JSON.stringify({ email, password }) }
     ),
+
+  me: () => request<Omit<AuthResponse, "access" | "refresh">>("/auth/me/"),
+
+  register: (data: RegisterPayload) =>
+    request<{ user: AuthUser }>(
+      "/auth/register/",
+      { method: "POST", body: JSON.stringify(data) }
+    ),
+
+  forgotPassword: (email: string) =>
+    request<{ detail: string }>(
+      "/auth/password-reset/",
+      { method: "POST", body: JSON.stringify({ email }) }
+    ),
+
+  resetPassword: (token: string, password: string) =>
+    request<{ detail: string }>(
+      "/auth/password-reset/confirm/",
+      { method: "POST", body: JSON.stringify({ token, new_password: password, new_password_confirm: password }) }
+    ),
+
+  verifyEmail: (token: string) =>
+    request<{ detail: string }>(
+      "/auth/verify-email/",
+      { method: "POST", body: JSON.stringify({ token }) }
+    ),
+
+  logout: () =>
+    request("/auth/logout/", { method: "POST" }).catch(() => {}),
 }
 
 /** Billing console endpoints (admin scope). */
@@ -103,6 +132,154 @@ export const billing = {
     api.get<ProviderHealth>("/billing/admin/payment-providers/snippe/health/"),
   snippeBalance: () =>
     api.get<Record<string, unknown>>("/billing/admin/payment-providers/snippe/balance/"),
+}
+
+/** Platform admin — whole-platform command endpoints. */
+export const admin = {
+  dashboard: () => api.get<PlatformDashboard>("/platform/dashboard/"),
+  growth: (months = 12) =>
+    api.get<GrowthSeries>(`/platform/growth/?months=${months}`),
+  businesses: (q = "") =>
+    api.get<Paged<AdminBusiness>>(`/platform/businesses/${q}`),
+  business: (id: string) =>
+    api.get<AdminBusinessDetail>(`/platform/businesses/${id}/`),
+  users: (q = "") => api.get<Paged<AdminUser>>(`/platform/users/${q}`),
+  auditLogs: (q = "") =>
+    api.get<Paged<AuditEntry>>(`/platform/audit-logs/${q}`),
+  notifications: (q = "") =>
+    api.get<Paged<AdminNotification>>(`/platform/notifications/${q}`),
+  systemHealth: () => api.get<SystemHealth>("/platform/system-health/"),
+  activity: (limit = 40) =>
+    api.get<{ items: ActivityItem[] }>(`/platform/activity/?limit=${limit}`),
+  plans: () => api.get<AdminPlan[]>("/platform/plans/"),
+}
+
+export interface PlatformDashboard {
+  businesses: { total: number; active: number; suspended: number; new_30d: number; trend: Point[] }
+  users: { total: number; active: number; new_30d: number; staff: number; dau: number; mau: number; trend: Point[] }
+  subscriptions: {
+    active: number; trialing: number; expired: number; cancelled: number
+    past_due: number; expiring_7d: number
+    by_plan: { plan__code: string; plan__name: string; n: number }[]
+  }
+  revenue: {
+    total: number; last_30d: number
+    payments: { total: number; completed: number; failed: number; pending: number }
+    trend: Point[]
+  }
+  sales: { total: number; today: number; volume: number; trend: Point[] }
+  notifications: { total: number; unread: number; today: number }
+  webhooks: { failed: number; total: number }
+  alerts: { severity: string; title: string; href: string }[]
+  generated_at: string
+}
+
+export interface Point { date: string; value: number }
+
+export interface GrowthSeries {
+  businesses: { month: string; value: number }[]
+  users: { month: string; value: number }[]
+  sales: { month: string; value: number }[]
+}
+
+export interface AdminBusiness {
+  id: string
+  name: string
+  slug: string
+  business_type: string
+  status: string
+  phone: string
+  email: string
+  city: string
+  region: string
+  country: string
+  currency: string
+  logo: string | null
+  owner_email: string
+  owner_name: string
+  member_count: number
+  branch_count: number
+  plan_code: string | null
+  subscription_status: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminBusinessDetail extends AdminBusiness {
+  members: { id: string; user: string; email: string; role: string; status: string }[]
+  stats: { customers: number; products: number; suppliers: number; sales: number }
+}
+
+export interface AdminUser {
+  id: string
+  email: string
+  phone: string
+  first_name: string
+  last_name: string
+  full_name: string
+  avatar: string | null
+  is_active: boolean
+  is_verified: boolean
+  is_staff: boolean
+  is_superuser: boolean
+  date_joined: string
+  last_login: string | null
+  businesses: { id: string; name: string; status: string }[]
+  roles: string[]
+}
+
+export interface AuditEntry {
+  id: string
+  action: string
+  resource_type: string
+  resource_id: string
+  actor_email: string | null
+  actor_name: string | null
+  business_name: string | null
+  old_values: Record<string, unknown> | null
+  new_values: Record<string, unknown> | null
+  ip_address: string | null
+  user_agent: string
+  request_id: string
+  created_at: string
+}
+
+export interface AdminNotification {
+  id: string
+  user_email: string
+  business_name: string
+  type: string
+  title: string
+  message: string
+  read_at: string | null
+  created_at: string
+}
+
+export interface SystemHealth {
+  checked_at: string
+  services: Record<string, { status: string; error?: string; workers?: number; balance?: unknown }>
+}
+
+export interface ActivityItem {
+  id: string
+  action: string
+  actor: string | null
+  business: string | null
+  resource: string
+  time: string
+}
+
+export interface AdminPlan {
+  id: string
+  code: string
+  name: string
+  price_monthly: number
+  price_yearly: number
+  currency: string
+  interval: string
+  is_active: boolean
+  is_public: boolean
+  active_subscriptions: number
 }
 
 // ── normalized types (match backend serializers) ─────────────────────────
@@ -273,4 +450,38 @@ export interface ProviderHealth {
   latency_ms?: number
   balance?: unknown
   error?: string
+}
+
+// ── auth ───────────────────────────────────────────────────────────────────
+
+export interface AuthUser {
+  id: string
+  email: string
+  phone?: string
+  first_name?: string
+  last_name?: string
+  full_name?: string
+  avatar?: string | null
+  is_verified?: boolean
+}
+
+export interface AuthResponse {
+  access: string
+  refresh: string
+  user: AuthUser
+  role: string            // SUPER_ADMIN | ADMIN | OWNER | MANAGER | ... | CUSTOMER
+  status: string          // ACTIVE | SUSPENDED
+  permissions: string[]
+  is_platform_admin: boolean
+  requires_email_verification: boolean
+  requires_mfa: boolean
+}
+
+export interface RegisterPayload {
+  first_name: string
+  last_name: string
+  email: string
+  phone?: string
+  password: string
+  password_confirm: string
 }

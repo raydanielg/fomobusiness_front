@@ -47,3 +47,10 @@ export function timeAgo(iso: string | null | undefined): string {
   if (h < 24) return `${h}h ago`
   return `${Math.floor(h / 24)}d ago`
 }
+
+/** Compact non-money counts — 1,234 → "1.2K". */
+export function numCompact(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`
+  return value.toLocaleString()
+}
