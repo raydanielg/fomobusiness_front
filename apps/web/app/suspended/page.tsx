@@ -13,7 +13,7 @@ export default function SuspendedPage() {
           a mistake, please reach out.
         </p>
       </div>
-      <Button render={<Link href="/contact" />}>
+      <Button nativeButton={false} render={<Link href="/contact" />}>
         Contact Support
       </Button>
     </div>

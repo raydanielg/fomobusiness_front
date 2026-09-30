@@ -129,10 +129,10 @@ export function Landing() {
             <a href="#faq" className="hover:text-foreground">Help</a>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="ghost" size="sm" render={<Link href="/auth/login" />}>
+            <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/auth/login" />}>
               Log in
             </Button>
-            <Button size="sm" render={<Link href="/auth/register" />}>
+            <Button size="sm" nativeButton={false} render={<Link href="/auth/register" />}>
               Get Started
             </Button>
           </div>
@@ -163,10 +163,10 @@ export function Landing() {
               your pocket.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Button size="lg" render={<Link href="/auth/register" />}>
+              <Button size="lg" nativeButton={false} render={<Link href="/auth/register" />}>
                 Get Started <ArrowRight size={16} />
               </Button>
-              <Button size="lg" variant="outline" render={<a href="#showcase" />}>
+              <Button size="lg" variant="outline" nativeButton={false} render={<a href="#showcase" />}>
                 Explore Fomo
               </Button>
             </div>
@@ -326,10 +326,10 @@ export function Landing() {
           <PhoneMockup src="/screens/reports.png" alt="Fomo reports" tilt={6} className="md:mt-8" />
         </div>
         <div className="mt-12 flex flex-wrap justify-center gap-3">
-          <Button size="lg" render={<Link href="/mobile-app" />}>
+          <Button size="lg" nativeButton={false} render={<Link href="/mobile-app" />}>
             Download on Android
           </Button>
-          <Button size="lg" variant="outline" render={<Link href="/mobile-app" />}>
+          <Button size="lg" variant="outline" nativeButton={false} render={<Link href="/mobile-app" />}>
             Download on iOS
           </Button>
         </div>
@@ -427,10 +427,10 @@ export function Landing() {
             Free to start. Set up in minutes. Runs on the phone you already have.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
-            <Button size="lg" render={<Link href="/auth/register" />}>
+            <Button size="lg" nativeButton={false} render={<Link href="/auth/register" />}>
               Get Started <ArrowRight size={16} />
             </Button>
-            <Button size="lg" variant="outline" render={<Link href="/auth/login" />}>
+            <Button size="lg" variant="outline" nativeButton={false} render={<Link href="/auth/login" />}>
               Log in
             </Button>
           </div>

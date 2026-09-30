@@ -13,10 +13,10 @@ export default function ForbiddenPage() {
         </p>
       </div>
       <div className="flex gap-3">
-        <Button variant="outline" render={<Link href="javascript:history.back()" />}>
+        <Button variant="outline" nativeButton={false} render={<Link href="javascript:history.back()" />}>
           Go Back
         </Button>
-        <Button render={<Link href="/mobile-app" />}>
+        <Button nativeButton={false} render={<Link href="/mobile-app" />}>
           Open Mobile App Info
         </Button>
       </div>
