@@ -1,103 +1,103 @@
 "use client"
 
-import { Suspense, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useState } from "react"
+import Link from "next/link"
 import Image from "next/image"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@workspace/ui/components/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card"
+import { Card, CardContent } from "@workspace/ui/components/card"
 import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field"
-import { Input } from "@workspace/ui/components/input"
+import { LockKey } from "@phosphor-icons/react"
 import { api, ApiError } from "@/lib/api"
+import { IconInput } from "@/components/icon-input"
+import { Suspense } from "react"
 
 function ResetForm() {
   const router = useRouter()
-  const token = useSearchParams().get("token") ?? ""
+  const params = useSearchParams()
+  const token = params.get("token") ?? ""
   const [password, setPassword] = useState("")
   const [confirm, setConfirm] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
-  const [done, setDone] = useState(false)
 
-  async function submit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
     if (password !== confirm) {
       setError("Passwords do not match.")
       return
     }
+    if (!token) {
+      setError("Invalid or missing reset token.")
+      return
+    }
     setLoading(true)
     try {
       await api.resetPassword(token, password)
-      setDone(true)
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Reset failed.")
+      router.push("/auth/login")
+    } catch (e2) {
+      setError(e2 instanceof ApiError ? e2.message : "Reset failed.")
     } finally {
       setLoading(false)
     }
   }
 
-  if (done) {
-    return (
-      <Card className="w-full max-w-sm text-center">
-        <CardHeader>
-          <CardTitle>Password updated</CardTitle>
-          <CardDescription>You can sign in with your new password.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button className="w-full" onClick={() => router.push("/auth/login")}>
-            Sign in
-          </Button>
-        </CardContent>
-      </Card>
-    )
-  }
-
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader className="text-center">
-        <div className="mx-auto mb-3 flex size-16 items-center justify-center">
-          <Image src="/fomo_icon.png" alt="Fomo" width={64} height={64} />
-        </div>
-        <CardTitle className="text-xl">New password</CardTitle>
-        <CardDescription>Choose a strong password.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={submit}>
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="pw">New password</FieldLabel>
-              <Input id="pw" type="password" required minLength={8}
-                autoComplete="new-password"
-                value={password} onChange={(e) => setPassword(e.target.value)} />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="pw2">Confirm</FieldLabel>
-              <Input id="pw2" type="password" required minLength={8}
-                autoComplete="new-password"
-                value={confirm} onChange={(e) => setConfirm(e.target.value)} />
-            </Field>
-            {error && <p className="text-destructive text-sm" role="alert">{error}</p>}
-            <Field>
-              <Button type="submit" disabled={loading || !token}>
-                {loading ? "Updating…" : "Update password"}
-              </Button>
-            </Field>
-            {!token && (
-              <p className="text-destructive text-xs">Missing reset token in the link.</p>
-            )}
-          </FieldGroup>
-        </form>
-      </CardContent>
-    </Card>
+    <form onSubmit={onSubmit}>
+      <FieldGroup>
+        {error && (
+          <p className="rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-500">
+            {error}
+          </p>
+        )}
+        <Field>
+          <FieldLabel>New password</FieldLabel>
+          <IconInput icon={<LockKey />} type="password"
+            placeholder="Min. 8 characters" autoComplete="new-password" required
+            value={password} onChange={(e) => setPassword(e.target.value)} />
+        </Field>
+        <Field>
+          <FieldLabel>Confirm new password</FieldLabel>
+          <IconInput icon={<LockKey />} type="password"
+            placeholder="Repeat password" autoComplete="new-password" required
+            value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+        </Field>
+        <Field>
+          <Button type="submit" size="lg" className="h-12 text-base" disabled={loading}>
+            {loading ? "Resetting…" : "Reset password"}
+          </Button>
+        </Field>
+      </FieldGroup>
+    </form>
   )
 }
 
 export default function ResetPasswordPage() {
   return (
-    <div className="bg-muted/40 flex min-h-svh items-center justify-center p-4">
-      <Suspense fallback={null}>
-        <ResetForm />
-      </Suspense>
+    <div className="bg-background flex min-h-svh items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardContent className="space-y-6 p-8">
+          <div className="space-y-2 text-center">
+            <Link href="/" className="inline-flex items-center gap-2 font-bold">
+              <Image src="/fomo_icon.png" alt="Fomo" width={32} height={32} />
+              Fomo
+            </Link>
+            <h1 className="text-2xl font-bold tracking-tight">Choose a new password</h1>
+            <p className="text-muted-foreground text-sm">
+              Enter and confirm your new password.
+            </p>
+          </div>
+          <Suspense fallback={null}>
+            <ResetForm />
+          </Suspense>
+          <p className="text-muted-foreground text-center text-sm">
+            <Link href="/auth/login" className="font-medium underline underline-offset-4">
+              Back to sign in
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
     </div>
   )
 }

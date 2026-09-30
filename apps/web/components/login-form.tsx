@@ -6,6 +6,8 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 
 import { cn } from "cn"
+import { Envelope, LockKey } from "@phosphor-icons/react"
+import { IconInput } from "@/components/icon-input"
 import { Button } from "@workspace/ui/components/button"
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
@@ -76,8 +78,9 @@ export function LoginForm({
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input
+                <IconInput
                   id="email" type="email" placeholder="you@example.com"
+                  icon={<Envelope />}
                   autoComplete="email" required
                   value={email} onChange={(e) => setEmail(e.target.value)}
                 />
@@ -90,9 +93,11 @@ export function LoginForm({
                     Forgot password?
                   </Link>
                 </div>
-                <Input
-                  id="password" type="password" autoComplete="current-password"
-                  required
+                <IconInput
+                  id="password" type="password"
+                  icon={<LockKey />}
+                  autoComplete="current-password" required
+                  placeholder="Enter your password"
                   value={password} onChange={(e) => setPassword(e.target.value)}
                 />
               </Field>
@@ -109,7 +114,7 @@ export function LoginForm({
                 <p className="text-destructive text-sm" role="alert">{error}</p>
               )}
               <Field>
-                <Button type="submit" disabled={loading}>
+                <Button type="submit" disabled={loading} size="lg" className="h-12 text-base">
                   {loading ? "Signing in…" : "Sign In"}
                 </Button>
               </Field>

@@ -4,18 +4,20 @@ import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-
 import { Button } from "@workspace/ui/components/button"
-import {
-  Card, CardContent, CardDescription, CardHeader, CardTitle,
-} from "@workspace/ui/components/card"
+import { Card, CardContent } from "@workspace/ui/components/card"
 import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field"
-import { Input } from "@workspace/ui/components/input"
 import { Checkbox } from "@workspace/ui/components/checkbox"
+import {
+  User, Envelope, Phone, LockKey,
+} from "@phosphor-icons/react"
 import { api, ApiError } from "@/lib/api"
+import { useAuth } from "@/lib/auth"
+import { IconInput } from "@/components/icon-input"
 
 export default function RegisterPage() {
   const router = useRouter()
+  const { signIn } = useAuth()
   const [form, setForm] = useState({
     first_name: "", last_name: "", email: "", phone: "",
     password: "", password_confirm: "",
@@ -23,132 +25,116 @@ export default function RegisterPage() {
   const [terms, setTerms] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
-  const [done, setDone] = useState(false)
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }))
 
-  async function submit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (loading) return
     setError("")
+    if (form.password !== form.password_confirm) {
+      setError("Passwords do not match.")
+      return
+    }
     if (!terms) {
-      setError("Please accept the Terms of Service.")
+      setError("Please accept the terms to continue.")
       return
     }
     setLoading(true)
     try {
-      await api.register({
-        first_name: form.first_name.trim(),
-        last_name: form.last_name.trim(),
-        email: form.email.trim(),
-        phone: form.phone.trim() || undefined,
-        password: form.password,
-        password_confirm: form.password_confirm,
-      })
-      setDone(true)
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Registration failed.")
-    } finally {
+      await api.register(form)
+      const res = await api.login(form.email, form.password)
+      signIn(res)
+      router.push(res.is_platform_admin ? "/admin/dashboard" : "/mobile-app")
+    } catch (e2) {
+      setError(e2 instanceof ApiError ? e2.message : "Registration failed.")
       setLoading(false)
     }
   }
 
-  if (done) {
-    return (
-      <div className="bg-muted/40 flex min-h-svh items-center justify-center p-4">
-        <Card className="w-full max-w-sm text-center">
-          <CardHeader>
-            <CardTitle>Check your email</CardTitle>
-            <CardDescription>
-              We sent a verification link to <strong>{form.email}</strong>.
-              Verify it, then sign in.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => router.push("/auth/login")} className="w-full">
-              Go to sign in
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
   return (
-    <div className="bg-muted/40 flex min-h-svh items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <Card>
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-3 flex size-16 items-center justify-center">
-              <Image src="/fomo_icon.png" alt="Fomo" width={64} height={64} />
-            </div>
-            <CardTitle className="text-xl">Create your account</CardTitle>
-            <CardDescription>Fomo — Your Business, Simplified.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={submit}>
-              <FieldGroup>
-                <div className="grid grid-cols-2 gap-3">
-                  <Field>
-                    <FieldLabel htmlFor="fn">First name</FieldLabel>
-                    <Input id="fn" required value={form.first_name} onChange={set("first_name")} />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="ln">Last name</FieldLabel>
-                    <Input id="ln" required value={form.last_name} onChange={set("last_name")} />
-                  </Field>
-                </div>
-                <Field>
-                  <FieldLabel htmlFor="em">Email</FieldLabel>
-                  <Input id="em" type="email" required autoComplete="email"
-                    value={form.email} onChange={set("email")} />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="ph">Phone <span className="text-muted-foreground">(optional)</span></FieldLabel>
-                  <Input id="ph" type="tel" autoComplete="tel"
-                    value={form.phone} onChange={set("phone")} />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="pw">Password</FieldLabel>
-                  <Input id="pw" type="password" required minLength={8}
-                    autoComplete="new-password"
-                    value={form.password} onChange={set("password")} />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="pw2">Confirm password</FieldLabel>
-                  <Input id="pw2" type="password" required minLength={8}
-                    autoComplete="new-password"
-                    value={form.password_confirm} onChange={set("password_confirm")} />
-                </Field>
-                <Field>
-                  <label className="flex items-start gap-2 text-sm">
-                    <Checkbox
-                      checked={terms}
-                      onCheckedChange={(v) => setTerms(v === true)}
-                      className="mt-0.5"
-                    />
-                    <span>
-                      I agree to the <Link href="/terms" className="underline">Terms of Service</Link>{" "}
-                      and <Link href="/privacy" className="underline">Privacy Policy</Link>
-                    </span>
-                  </label>
-                </Field>
-                {error && <p className="text-destructive text-sm" role="alert">{error}</p>}
-                <Field>
-                  <Button type="submit" disabled={loading}>
-                    {loading ? "Creating account…" : "Create account"}
-                  </Button>
-                </Field>
-              </FieldGroup>
-            </form>
-            <p className="text-muted-foreground mt-4 text-center text-sm">
-              Already have an account?{" "}
-              <Link href="/auth/login" className="underline underline-offset-4">Sign in</Link>
+    <div className="bg-background flex min-h-svh items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardContent className="space-y-6 p-8">
+          <div className="space-y-2 text-center">
+            <Link href="/" className="inline-flex items-center gap-2 font-bold">
+              <Image src="/fomo_icon.png" alt="Fomo" width={32} height={32} />
+              Fomo
+            </Link>
+            <h1 className="text-2xl font-bold tracking-tight">Create your account</h1>
+            <p className="text-muted-foreground text-sm">
+              Start simplifying your business today.
             </p>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+
+          {error && (
+            <p className="rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-500">
+              {error}
+            </p>
+          )}
+
+          <form onSubmit={onSubmit}>
+            <FieldGroup>
+              <div className="grid grid-cols-2 gap-3">
+                <Field>
+                  <FieldLabel>First name</FieldLabel>
+                  <IconInput icon={<User />} placeholder="John" autoComplete="given-name"
+                    required value={form.first_name} onChange={set("first_name")} />
+                </Field>
+                <Field>
+                  <FieldLabel>Last name</FieldLabel>
+                  <IconInput icon={<User />} placeholder="Doe" autoComplete="family-name"
+                    required value={form.last_name} onChange={set("last_name")} />
+                </Field>
+              </div>
+              <Field>
+                <FieldLabel>Email</FieldLabel>
+                <IconInput icon={<Envelope />} type="email" placeholder="you@example.com"
+                  autoComplete="email" required
+                  value={form.email} onChange={set("email")} />
+              </Field>
+              <Field>
+                <FieldLabel>Phone <span className="text-muted-foreground">(optional)</span></FieldLabel>
+                <IconInput icon={<Phone />} type="tel" placeholder="+255…"
+                  autoComplete="tel" value={form.phone} onChange={set("phone")} />
+              </Field>
+              <Field>
+                <FieldLabel>Password</FieldLabel>
+                <IconInput icon={<LockKey />} type="password" placeholder="Min. 8 characters"
+                  autoComplete="new-password" required
+                  value={form.password} onChange={set("password")} />
+              </Field>
+              <Field>
+                <FieldLabel>Confirm password</FieldLabel>
+                <IconInput icon={<LockKey />} type="password" placeholder="Repeat password"
+                  autoComplete="new-password" required
+                  value={form.password_confirm} onChange={set("password_confirm")} />
+              </Field>
+              <Field orientation="horizontal">
+                <Checkbox id="terms" checked={terms}
+                  onCheckedChange={(v) => setTerms(!!v)} />
+                <FieldLabel htmlFor="terms" className="text-sm font-normal">
+                  I agree to the{" "}
+                  <Link href="/terms" className="underline">Terms</Link> and{" "}
+                  <Link href="/privacy" className="underline">Privacy Policy</Link>
+                </FieldLabel>
+              </Field>
+              <Field>
+                <Button type="submit" size="lg" className="h-12 text-base" disabled={loading}>
+                  {loading ? "Creating account…" : "Create account"}
+                </Button>
+              </Field>
+            </FieldGroup>
+          </form>
+
+          <p className="text-muted-foreground text-center text-sm">
+            Already have an account?{" "}
+            <Link href="/auth/login" className="font-medium underline underline-offset-4">
+              Sign in
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
     </div>
   )
 }
